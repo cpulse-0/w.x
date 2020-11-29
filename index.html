@@ -58,6 +58,14 @@ processData = function() {
   wx.data  = output
   wx.dates = dates
   wx.cumulative = cumul
+ 
+  var dv = new Date()
+  var yr = dv.getFullYear()
+  var mn = dv.getMonth() + 1
+  var dy = dv.getDate()
+  var _s = dy.toString().padStart(2,'0') + '/' + mn.toString().padStart(2,'0') + '/' + yr
+  wx.dates.push(_s)
+  wx.cumulative.push(wx.cumulative[wx.cumulative.length - 1])
 }
 
 
