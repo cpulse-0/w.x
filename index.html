@@ -43,7 +43,7 @@ processData = function() {
       var amount     = parseFloat(items[1])
       var type       = items[2]
       cum = cum + (type == "D" ? amount : type == "C" ? -amount : 0)
-      output.unshift({date: date, amount: amount, type: type, cumulative: parseFloat(cum.toFixed(2)) })
+      output.push({date: date, amount: amount, type: type, cumulative: parseFloat(cum.toFixed(2)) })
     }
   }
   console.log(output)
