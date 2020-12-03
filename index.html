@@ -2,6 +2,7 @@
 <html><meta charset="utf-8">
  <head><title>folio</title>
   <script src='https://code.jquery.com/jquery-3.3.1.min.js'></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.min.css" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.min.js"></script>
   <script src="record.js"></script>
@@ -50,8 +51,14 @@ processData = function() {
   
   var dates = []
   var cumul = []
+  var maxDate = new Date()
   output.forEach(function(ea) {
-    dates.push(ea.date)
+    var d = ea.date.split('/')
+    var e = new Date()
+        e.setUTCFullYear(parseInt(d[2]), parseInt(d[1]) - 1, parseInt(d[0]))
+    if (e > maxDate) { maxDate = e }
+    //dates.push(ea.date)
+    dates.push(e)
     cumul.push(ea.cumulative)
   })
   
@@ -63,7 +70,7 @@ processData = function() {
   var yr = dv.getFullYear()
   var mn = dv.getMonth() + 1
   var dy = dv.getDate()
-  var _s = dy.toString().padStart(2,'0') + '/' + mn.toString().padStart(2,'0') + '/' + yr
+  var _s = maxDate // dy.toString().padStart(2,'0') + '/' + mn.toString().padStart(2,'0') + '/' + yr
   wx.dates.push(_s)
   wx.cumulative.push(wx.cumulative[wx.cumulative.length - 1])
 }
@@ -99,6 +106,9 @@ wx.draw = function() {
           max: -00000,
           // beginAtZero: true
         }
+      }],
+      xAxes: [{
+        type: 'time',
       }]
     }
   }
