@@ -7,18 +7,77 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.min.js"></script>
   <script src="record.js"></script>
  <style>
+   @import url('https://fonts.googleapis.com/css2?family=Montserrat&display=swap');
+   @import url('https://fonts.googleapis.com/css2?family=Xanh+Mono&display=swap');
+   @import url('https://fonts.googleapis.com/css2?family=Anonymous+Pro&family=B612+Mono&display=swap');
+
    #debt {
-     position: absolute;
-     left: 50%;
-     top : 0%;
-     transform: translate(-50%, 0%);
-     width : 45%;
-     height: 45%;
-     border: 1px solid rgba(1,1,1,0);
+     position  : absolute;
+     left      : 50%;
+     top       : 0%;
+     transform : translate(-50%, 0%);
+     width     : 45%;
+     height    : 45%;
+     min-width : 650px;
+     min-height: 650px;
+     border    : 1px solid rgba(1,1,1,0);
    }
    #canvas-holder {
      position: relative;
    }
+
+   #debt-sum {
+     position: absolute;
+     right   : 0.4em;
+     top     : 41px;
+     height  : 3.5em;
+     font-family: 'Montserrat';
+   }
+   #debt-sum div {
+     display : inline-block;
+     white-space: pre-wrap;
+   }
+   #debt-sum-label {
+     color   : rgba( 144, 144, 144, 1.00);
+   }
+   .debt.red {
+     color   : rgba( 225, 67, 67, 1.00);
+   }
+
+   
+   #debt-minimum {
+     position: absolute;
+     left    : 0.4em;
+     top     : 8px;
+   }
+   .slider {
+     -webkit-appearance: none;  /* Override default CSS styles */
+     appearance: none;
+     width: 211px; /* Full-width */
+     height: 16px; /* Specified height */
+     background: #d3d3d3; /* Grey background */
+     outline: none; /* Remove outline */
+     opacity: 0.7; /* Set transparency (for mouse-over effects on hover) */
+     -webkit-transition: .2s; /* 0.2 seconds transition on hover */
+     transition: opacity .2s;
+   }
+   .slider:hover {
+    opacity: 1; /* Fully shown on mouse-over */
+   }
+  .slider::-webkit-slider-thumb {
+    -webkit-appearance: none; /* Override default look */
+    appearance: none;
+    width: 16px; /* Set a specific slider handle width */
+    height: 16px; /* Slider handle height */
+    background: rgba( 167, 88, 88, 0.96 ); /* Green background */
+    cursor: pointer; /* Cursor on hover */
+  }
+  .slider::-moz-range-thumb {
+    width: 16px; /* Set a specific slider handle width */
+    height: 16px; /* Slider handle height */
+    background: rgba( 167, 88, 88, 0.96 ); /* Green background */
+    cursor: pointer; /* Cursor on hover */
+  }
  </style>
  </head>
  <body>
@@ -27,9 +86,15 @@
      <div id='canvas-holder'>
      <canvas id='debt-canvas' width='500' height='500'></canvas>
      </div>
+     <div id='debt-sum'><div id='debt-sum-label'>Sum: </div><div id='debt-sum-value'></div></div>
+     <div id="debt-minimum">
+       <input type="range" min="0" max="100" value="100" class="slider" id="debt-range-slider">
+     </div>
    </div>
  </body>
 <script>
+
+commaThis = function(n) { var parts = n.toString().split('.'); parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g,','); return parts.join('.') }
 
 processData = function() {
   var cum    = 0
@@ -56,6 +121,7 @@ processData = function() {
     var d = ea.date.split('/')
     var e = new Date()
         e.setUTCFullYear(parseInt(d[2]), parseInt(d[1]) - 1, parseInt(d[0]))
+
     if (e > maxDate) { maxDate = e }
     //dates.push(ea.date)
     dates.push(e)
@@ -81,16 +147,18 @@ wx = {}
 wx.draw = function() {
  data = [0.4,0.7,3,4,5]
  options = {}
+
+ let current = wx.data[wx.data.length - 1].cumulative
  
  var ctx = $('#debt-canvas');
- var myChart = new Chart(ctx, {
+ wx.chart = new Chart(ctx, {
   type: 'line',
   data: {
     labels: wx.dates,
     datasets: [{ 
         data: wx.cumulative,
         label: "Newcastle",
-        borderColor: "#3e95cd",
+        borderColor: 'rgba( 167, 88, 88, 1.00 )', // "#3e95cd",
         fill: false,
       }
     ]
@@ -98,21 +166,48 @@ wx.draw = function() {
   options: {
     title: {
       display: true,
-      text: 'Debt'
+      text: 'Debt', // : ' + commaThis(current) + '$'
+      fontFamily: 'Montserrat',
+      fontSize  : 18,
+    },
+    legend: {
+      labels: {
+        fontFamily: 'Montserrat',
+        fontSize  : 14,
+      },
     },
     scales: {
       yAxes: [{
+        scaleLabel: {
+          fontFamily: 'Montserrat',
+        },
         ticks: {
-          max: -00000,
+          max: Math.floor(current * 0.92),
           // beginAtZero: true
+          // fontFamily: 'B612 Mono', // 'Anonymous Pro',
+          callback: function(v,i,vs) { return commaThis(v) + ' ' },
         }
       }],
       xAxes: [{
+        scaleLabel: {
+          fontFamily: 'Montserrat',
+        },
         type: 'time',
+        ticks: {
+          fontFamily: 'Montserrat',
+        }
       }]
     }
   }
-});
+ });
+ $('#debt-sum-value').append(' $<span class="debt red">' + commaThis(Math.abs(current)) + '</span>')
+ $('#debt-range-slider')
+    .on('change', function(e) {
+      var v = e.target.value
+      wx.chart.options.scales.yAxes[0].ticks.max = Math.floor(current * 0.92 * (v/100))
+      wx.chart.update()
+      console.log(e.target.value)
+    })
 }
 
 window.onload = function() {
